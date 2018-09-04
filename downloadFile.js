@@ -3,11 +3,13 @@ const AWS = require('aws-sdk'),
     path = require('path'),
     getFileNameWithRangeOfDate = require('./getFileNameWithDate').getFileNameWithRangeOfDate,
     verifyDate = require('./verifyDate').verifyDate,
+    configRegion = require('./config.json').region,
     config = require('./config.json').download,
+    configDownloadDirectory = config.downloadDirectory,
     configBucket = config.bucketDetails,
-    logFileName = config.logFileName,
-    time = config.time,
-    modifyDate = require('./modifyDate').modifyDate;
+    logFileName = process.argv[2],
+    startDate = process.argv[3],
+    endDate = process.argv[4];
 
 const ensureDirectoryExists = (filePath) => {
     let dirName = path.dirname(filePath);
@@ -21,35 +23,39 @@ const ensureDirectoryExists = (filePath) => {
     }
 }
 
-const downloadFile = (bucketName, FileKeyName, startDate, endDate) => {
+const downloadFile = (bucketName, FileKeyName, startDate, endDate, downloadDirectory) => {
 
-    s3Download = (fileName) => {
+    if (FileKeyName === undefined) {
+        console.log('please enter the file name with path in the script seprated by space');
+        return;
+    }
+    AWS.config.update({ region: configRegion });
+
+    s3Download = (fileName, downloadDirectoryWithBucketName) => {
         s3.getObject({ Bucket: bucketName, Key: fileName }, (err, data) => {
-            if (err) console.log('Error in getting the object check for bucketname or FilekeyName', err);
+            if (err) console.log('Error in getting the object, check for bucketname or FilekeyName');
             else {
-                ensureDirectoryExists(bucketName + "/" + fileName);
-                fs.writeFileSync(bucketName + "/" + fileName, data.Body, () => {
+                ensureDirectoryExists(path.join(downloadDirectoryWithBucketName, fileName));
+                fs.writeFileSync(path.join(downloadDirectoryWithBucketName, fileName), data.Body, () => {
                     console.log('Finished retrieving');
                 })
             }
         })
     }
 
-    ensureDirectoryExists(bucketName);
+    let downloadDirectoryWithBucketName = path.join(downloadDirectory, bucketName)
+    ensureDirectoryExists(downloadDirectoryWithBucketName);
     let s3 = new AWS.S3();
     if (verifyDate(startDate) && verifyDate(endDate)) {
-        startDate = modifyDate(startDate);
-        endDate = modifyDate(endDate);
         if (startDate < endDate) {
             getFileNameWithRangeOfDate(FileKeyName, startDate, endDate).forEach((fileName) => {
-                //check the file already exists
-                fs.exists(bucketName + "/" + fileName, function (exists) {
+                fs.exists(path.join(downloadDirectoryWithBucketName, fileName), function (exists) {
                     if (exists) {
                         console.log("Skipping: " + fileName);
                     }
                     else {
                         console.log("Retrieving: " + fileName);
-                        // s3Download(fileName);
+                        s3Download(fileName, downloadDirectoryWithBucketName);
                     }
                 })
             })
@@ -59,8 +65,7 @@ const downloadFile = (bucketName, FileKeyName, startDate, endDate) => {
         }
     }
     else {
-        console.log('Some error with date format change the config file and date entered is matching');
+        console.log('Some error with date format ensure that the date format and date entered is matching');
     }
 }
-// downloadFile(configBucket.bucketName, logFileName, time.startDate, time.endDate);
-downloadFile(configBucket.bucketName, logFileName, "2018-08-06", "2018-09-05");
+downloadFile(configBucket.bucketName, logFileName, startDate, endDate, configDownloadDirectory);

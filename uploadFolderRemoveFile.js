@@ -19,6 +19,19 @@ const uploadDir = (directoryPath, bucketName) => {
             } else {
                 console.log('Successfully uploaded ' + bucketFilePath + ' to ' + bucketName);
             }
+
+            if (data.ETag) {
+                console.log(data.ETag);
+                fs.unlink(bucketFilePath, (err) => {
+                    if (err)
+                        console.error(err);
+                    else {
+                        console.log("done " + bucketFilePath);
+                    }
+                })
+            } else {
+                console.log("\x1b[31m", "File uploading was unsuccessful");
+            }
         });
     }
 

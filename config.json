@@ -1,31 +1,21 @@
 {
+    "region": "us-east-2",
     "upload": {
         "time": {
-            "minTimePeriod": 30,
-            "maxTimePeriod": 180
+            "minTimePeriod": 30
         },
         "bucketDetails": {
             "bucketName": "testcli96146"
         },
         "localDirectoriesPathDetails": {
-            "directoryPathArray": ["./testuploadfolder/"]
-        },
-        "credentials": {
-
+            "directoryPathArrays": ["./testuploadfolder/"]
         }
     },
     "download": {
         "bucketDetails": {
             "bucketName": "testcli96146"
         },
-        "dateFormat": "YYYY-MM-DD",
-        "credentials": {
-
-        },
-        "logFileName": "testuploadfolder/exotel/access-log/access.log",
-        "time": {
-            "startDate": "2018-08-21",
-            "endDate": "2018-09-21"
-        }
+        "downloadDirectory": "/home/exotel/Downloads",
+        "dateFormat": "YYYY-MM-DD"
     }
 }
