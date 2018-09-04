@@ -7,6 +7,7 @@ getFileNameWithDate = (origFileName, fileModifiedTime) => {
 getFileNameWithRangeOfDate = (origFileName, startDate, endDate) => {
     // console.log(startDate);
     // console.log(endDate);
+    console.log('Date is verified');
     var start = new Date(startDate); //YYYY-MM-DD
     var end = new Date(endDate); //YYYY-MM-DD
 
@@ -33,7 +34,7 @@ module.exports = {
 // }
 
 // getFileNameWithDate(fileName);
-console.log(getFileNameWithDate('package.json', '20180819'));
+// console.log(getFileNameWithDate('package.json', '20180819'));
 /*
 fs.stat(fileName, (err, stats) => {
     if (err) return console.log(err);

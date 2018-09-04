@@ -1,0 +1,31 @@
+{
+    "upload": {
+        "time": {
+            "minTimePeriod": 30,
+            "maxTimePeriod": 180
+        },
+        "bucketDetails": {
+            "bucketName": "testcli96146"
+        },
+        "localDirectoriesPathDetails": {
+            "directoryPathArray": ["./testuploadfolder/"]
+        },
+        "credentials": {
+
+        }
+    },
+    "download": {
+        "bucketDetails": {
+            "bucketName": "testcli96146"
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "credentials": {
+
+        },
+        "logFileName": "testuploadfolder/exotel/access-log/access.log",
+        "time": {
+            "startDate": "2018-08-21",
+            "endDate": "2018-09-21"
+        }
+    }
+}
