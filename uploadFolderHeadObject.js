@@ -12,14 +12,22 @@ const uploadDir = (directoryPath, bucketName) => {
 
     s3Upload = (params, bucketFilePath) => {
         let s3 = new AWS.S3();
-        s3.upload(params, (err, data) => {
+        s3.headObject(params, (err, data) => {
             if (err) {
-                console.log('check for params are correct');
-                console.log(err);
-            } else {
-                console.log('Successfully uploaded ' + bucketFilePath + ' to ' + bucketName);
+                s3.upload(params, (err, data) => {
+                    if (err) {
+                        console.log('check for params are correct');
+                        console.log(err);
+                    } else {
+                        console.log('Successfully uploaded ' + bucketFilePath + ' to ' + bucketName);
+                    }
+                });
             }
-        });
+            else {
+                console.log('data already exists on s3');
+
+            }
+        })
     }
 
     directoryWalkSync = (currentDirPath, callback) => {
@@ -44,7 +52,7 @@ const uploadDir = (directoryPath, bucketName) => {
             if (err.code === "ENOENT")
                 console.log("File not found check for path");
             else
-                console.log("Other error", err);
+                console.log("Other error");
         }
     }
 

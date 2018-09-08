@@ -1,8 +1,8 @@
-const AWS = require('aws-sdk'),
+const AWS = require("aws-sdk"),
     path = require("path"),
-    fs = require('fs'),
-    configRegion = require('./config.json').region,
-    config = require('./config.json').upload,
+    fs = require("fs"),
+    configRegion = require("./config.json").region,
+    config = require("./config.json").upload,
     configTime = config.time,
     configBucket = config.bucketDetails,
     configLocalDirectory = config.localDirectoriesPathDetails;
@@ -14,63 +14,59 @@ const uploadDir = (directoryPath, bucketName) => {
         let s3 = new AWS.S3();
         s3.upload(params, (err, data) => {
             if (err) {
-                console.log('check for params are correct');
-                console.log(err);
+                console.log("check for params are correct");
             } else {
-                console.log('Successfully uploaded ' + bucketFilePath + ' to ' + bucketName);
-            }
-
-            if (data.ETag) {
-                console.log(data.ETag);
-                fs.unlink(bucketFilePath, (err) => {
-                    if (err)
-                        console.error(err);
-                    else {
-                        console.log("done " + bucketFilePath);
-                    }
-                })
-            } else {
-                console.log("\x1b[31m", "File uploading was unsuccessful");
+                console.log("Successfully uploaded " + bucketFilePath + " to " + bucketName);
+                if (data.ETag) {
+                    fs.unlink(bucketFilePath, (err) => {
+                        if (err)
+                            console.error(err);
+                        else {
+                            console.log("Removed the file " + bucketFilePath);
+                        }
+                    })
+                } else {
+                    console.log("\x1b[31m", "File uploading was unsuccessful");
+                }
             }
         });
     }
 
     directoryWalkSync = (currentDirPath, callback) => {
-        console.log('inside directoryWalksync currentdir :', currentDirPath)
+        console.log("inside directoryWalksync currentdir :", currentDirPath)
         try {
             fs.readdirSync(currentDirPath).forEach(function (pathName) {
                 let filePath = path.join(currentDirPath, pathName);
-                let stat = fs.statSync(filePath);
-                if (stat.isFile()) {
-                    let fileModifiedTime = stat.mtime;
+                let fileStat = fs.statSync(filePath);
+                if (fileStat.isFile()) {
+                    let fileModifiedTime = fileStat.mtime;
                     let currentTime = new Date();
                     let diffBetweenCurrentAndModifiedTime = (currentTime - fileModifiedTime) / (1000 * 60 * 60 * 24);
                     if (diffBetweenCurrentAndModifiedTime > configTime.minTimePeriod) {
                         callback(filePath);
                     }
-                } else if (stat.isDirectory()) {
+                } else if (fileStat.isDirectory()) {
                     directoryWalkSync(filePath, callback);
                 }
             });
         }
         catch (err) {
             if (err.code === "ENOENT")
-                console.log("File not found check for path");
+                console.error("File not found check for path");
             else
-                console.log("Other error");
+                console.log("Error: ", err);
         }
     }
 
-    directoryWalkSync(directoryPath, (filePath) => {
+    directoryWalkSync(directoryPath, async (filePath) => {
         let bucketFilePath = filePath;
-        console.log(bucketFilePath);
-
+        let fileStream = await fs.createReadStream(filePath);
         let params = {
             Bucket: bucketName,
             Key: bucketFilePath,
-            Body: fs.readFileSync(filePath)
+            Body: fileStream
         };
-        s3Upload(params, bucketFilePath);
+        await s3Upload(params, bucketFilePath);
     });
 };
 

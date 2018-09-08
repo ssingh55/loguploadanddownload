@@ -8,4 +8,4 @@ read startDate
 echo "Enter the end date in YYYY-MM-DD format"
 read endDate
 
-node downloadFile.js $fileName $startDate $endDate
+node functionExecutionDownloadFile.js $fileName $startDate $endDate
