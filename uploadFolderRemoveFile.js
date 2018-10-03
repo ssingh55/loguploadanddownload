@@ -3,26 +3,37 @@ const AWS = require("aws-sdk"),
     fs = require("fs"),
     configRegion = require("./config.json").region,
     config = require("./config.json").upload,
-    configTime = config.time,
-    configBucket = config.bucketDetails,
-    configLocalDirectory = config.localDirectoriesPathDetails;
+    configTime = config.time;
 
-const uploadDir = (directoryPath, bucketName) => {
+configAWSregion = () => {
     AWS.config.update({ region: configRegion });
+    return AWS.config.region;
+}
 
-    s3Upload = (params, bucketFilePath) => {
+s3Upload = (params, bucketFilePath, localFilePath, bucketName) => {
+    return new Promise((resolve, reject) => {
         let s3 = new AWS.S3();
         s3.upload(params, (err, data) => {
             if (err) {
-                console.log("check for params are correct");
+                if (err.code == 'NoSuchBucket') {
+                    console.log('Check the bucket name');
+                    resolve(false);
+                }
+                else {
+                    console.log("check for params are correct", err);
+                    resolve(false);
+                }
             } else {
-                console.log("Successfully uploaded " + bucketFilePath + " to " + bucketName);
                 if (data.ETag) {
-                    fs.unlink(bucketFilePath, (err) => {
-                        if (err)
+                    console.log("Successfully uploaded " + bucketFilePath + " to " + bucketName);
+                    fs.unlink(localFilePath, (err) => {
+                        if (err) {
                             console.error(err);
+                            resolve(false);
+                        }
                         else {
-                            console.log("Removed the file " + bucketFilePath);
+                            console.log("Removed the file " + localFilePath);
+                            resolve(true);
                         }
                     })
                 } else {
@@ -30,7 +41,12 @@ const uploadDir = (directoryPath, bucketName) => {
                 }
             }
         });
-    }
+    })
+}
+
+const uploadDir = (directoryPath, bucketName) => {
+    console.log('inside uploadDir function');
+    configAWSregion();
 
     directoryWalkSync = (currentDirPath, callback) => {
         console.log("inside directoryWalksync currentdir :", currentDirPath)
@@ -58,18 +74,24 @@ const uploadDir = (directoryPath, bucketName) => {
         }
     }
 
-    directoryWalkSync(directoryPath, async (filePath) => {
-        let bucketFilePath = filePath;
-        let fileStream = await fs.createReadStream(filePath);
+    directoryWalkSync(directoryPath, async (localFilePath) => {
+        let bucketFilePath;
+        if (localFilePath.startsWith("/"))
+            bucketFilePath = localFilePath.slice(1);
+        else
+            bucketFilePath = localFilePath;
+        let fileStream = await fs.createReadStream(localFilePath);
         let params = {
             Bucket: bucketName,
             Key: bucketFilePath,
             Body: fileStream
         };
-        await s3Upload(params, bucketFilePath);
+        await s3Upload(params, bucketFilePath, localFilePath, bucketName);
     });
 };
 
-configLocalDirectory.directoryPathArrays.forEach((directory) => {
-    uploadDir(directory, configBucket.bucketName);
-})
+module.exports = {
+    configAWSregion,
+    uploadDir,
+    s3Upload
+}

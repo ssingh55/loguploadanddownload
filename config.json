@@ -1,19 +1,19 @@
 {
-    "region": "us-east-2",
+    "region": "ap-south-1",
     "upload": {
         "time": {
             "minTimePeriod": 0
         },
         "bucketDetails": {
-            "bucketName": "testcli96146"
+            "bucketName": "test9614"
         },
         "localDirectoriesPathDetails": {
-            "directoryPathArrays": ["testuploadfolderdata/"]
+            "directoryPathArrays": ["/home/exotel/awsS3TestUsingNode/production/testuploadfolderdata/"]
         }
     },
     "download": {
         "bucketDetails": {
-            "bucketName": "testcli6146"
+            "bucketName": "testcli96146"
         },
         "downloadDirectory": "/home/exotel/Downloads",
         "dateFormat": "YYYY-MM-DD"

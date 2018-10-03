@@ -9,7 +9,7 @@ const verifyDate = (date) => {
         if (moment(date, dateFormat, true).isValid())
             return true;
         else {
-            console.log("There some with the specified date");
+            console.log("There some error with the specified date");
             return false;
         }
     }

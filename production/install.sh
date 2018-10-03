@@ -1,8 +1,9 @@
 #!/bin/bash
 
-if ! which node >/dev/null
+set -e
+if  ! which node >/dev/null
 then 
-curl -sL https://rpm.nodesource.com/setup_8.x | bash -
+curl -sL https://rpm.nodesource.com/setup_8.x | bash - 
 yum install nodejs
 echo "Node has been installed."
 sleep 5

@@ -3,18 +3,12 @@ const AWS = require("aws-sdk"),
     path = require("path"),
     getFileNameWithRangeOfDate = require("./getFileNameWithRangeOfDate").getFileNameWithRangeOfDate,
     verifyDate = require("./verifyDate").verifyDate,
-    configRegion = require("./config.json").region,
-    config = require("./config.json").download,
-    configDownloadDirectory = config.downloadDirectory,
-    configBucket = config.bucketDetails,
-    logFileName = process.argv[2],
-    startDate = process.argv[3],
-    endDate = process.argv[4];
+    configRegion = require("./config.json").region;
 
-const ensureDirectoryExists = (filePath) => {
+ensureDirectoryExists = (filePath) => {
     let dirName = path.dirname(filePath);
     if (fs.existsSync(dirName)) {
-        console.log("folder created");
+        console.log("folder exists");
         return true;
     }
     else {
@@ -23,37 +17,76 @@ const ensureDirectoryExists = (filePath) => {
     }
 }
 
-const downloadFile = (bucketName, fileKeyName, startDate, endDate, downloadDirectory) => {
+configAWSregion = () => {
+    AWS.config.update({ region: configRegion });
+    return AWS.config.region;
+}
 
+s3Download = (fileName, downloadDirectory, bucketName) => {
+    return new Promise((resolve, reject) => {
+        ensureDirectoryExists(path.join(downloadDirectory, fileName));
+        let newDownloadFile = fs.createWriteStream(path.join(downloadDirectory, fileName));
+        let s3 = new AWS.S3();
+        s3.getObject({ Bucket: bucketName, Key: fileName })
+            .createReadStream()
+            .on("error", (error) => {
+                fs.unlink(path.join(downloadDirectory, fileName), (err) => {
+                    if (err) {
+                        console.error(err);
+                        resolve(false);
+                    }
+                    else {
+                        console.log("Removed the file " + fileName);
+                        resolve(false);
+                    }
+                })
+                if (error.code === "NoSuchBucket") {
+                    console.log("No such bucket found");
+                    resolve(error.code)
+                }
+                else {
+                    console.log("No Such Key found or Stream Content Length Mismatch");
+                    resolve('No such key found');
+                }
+            })
+            .on("end", () => {
+                console.log('Successfully got the object');
+                resolve(true);
+            })
+            .pipe(newDownloadFile);
+    })
+};
+
+const downloadFile = (bucketName, fileKeyName, startDate, endDate, downloadDirectory) => {
     if (fileKeyName === undefined) {
         console.log("please enter the file name with path in the script");
         console.log("Don't run it without shell script file");
-        return;
+        return undefined;
     }
     if (startDate === undefined) {
         console.log("please enter the startdate in the script");
         console.log("Don't run it without shell script file");
-        return;
+        return undefined;
     }
     if (endDate === undefined) {
         console.log("please enter the enddate in the script");
         console.log("Don't run it without shell script file");
-        return;
+        return undefined;
     }
-    AWS.config.update({ region: configRegion });
+
+    configAWSregion();
 
     ensureDirectoryExists(downloadDirectory);
-    let s3 = new AWS.S3();
     if (verifyDate(startDate) && verifyDate(endDate)) {
         if (startDate <= endDate) {
             getFileNameWithRangeOfDate(fileKeyName, startDate, endDate).forEach((fileName) => {
-                fs.exists(path.join(downloadDirectory, fileName), function (exists) {
+                fs.exists(path.join(downloadDirectory, fileName), (exists) => {
                     if (exists) {
                         console.log("Skipping: " + fileName);
                     }
                     else {
                         console.log("Retrieving: " + fileName);
-                        s3Download(fileName, downloadDirectory);
+                        s3Download(fileName, downloadDirectory, bucketName);
                     }
                 })
             })
@@ -65,23 +98,11 @@ const downloadFile = (bucketName, fileKeyName, startDate, endDate, downloadDirec
     else {
         console.log("Some error with date format ensure that the date format and date entered is matching");
     }
-
-    s3Download = (fileName, downloadDirectory) => {
-        ensureDirectoryExists(path.join(downloadDirectory, fileName));
-        let newDownloadFile = fs.createWriteStream(path.join(downloadDirectory, fileName));
-        s3.getObject({ Bucket: bucketName, Key: fileName })
-            .createReadStream()
-            .on("error", (error) => {
-                if (error.code === "NoSuchBucket") {
-                    console.log("No such bucket found");
-                }
-                else
-                    console.log("No Such Key found or Stream Content Length Mismatch");
-            })
-            .on("end", () => {
-                console.log('Successfully got the object');
-            })
-            .pipe(newDownloadFile);
-    };
 }
-downloadFile(configBucket.bucketName, logFileName, startDate, endDate, configDownloadDirectory);
+
+module.exports = {
+    ensureDirectoryExists,
+    configAWSregion,
+    downloadFile,
+    s3Download
+}

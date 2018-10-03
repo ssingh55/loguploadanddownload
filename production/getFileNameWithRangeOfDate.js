@@ -1,5 +1,4 @@
 getFileNameWithRangeOfDate = (origFileName, startDate, endDate) => {
-    console.log('Date is verified');
     let newStartDate = new Date(startDate);
     let end = new Date(endDate);
 
