@@ -63,12 +63,12 @@ const downloadFile = (bucketName, fileKeyName, startDate, endDate, downloadDirec
         console.log("Don't run it without shell script file");
         return undefined;
     }
-    if (startDate === undefined || fileKeyName.trim() === "") {
+    if (startDate === undefined) {
         console.log("please enter the startdate correctly in the script");
         console.log("Don't run it without shell script file");
         return undefined;
     }
-    if (endDate === undefined || fileKeyName.trim() === "") {
+    if (endDate === undefined) {
         console.log("please enter the enddate correctly in the script");
         console.log("Don't run it without shell script file");
         return undefined;
