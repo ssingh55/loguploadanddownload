@@ -16,11 +16,11 @@ s3Upload = (params, bucketFilePath, localFilePath, bucketName) => {
         s3.upload(params, (err, data) => {
             if (err) {
                 if (err.code == 'NoSuchBucket') {
-                    console.log('Check the bucket name');
+                    console.error('Check the bucket name');
                     resolve(false);
                 }
                 else {
-                    console.log("check for params are correct", err);
+                    console.error("check for params are correct", err);
                     resolve(false);
                 }
             } else {
