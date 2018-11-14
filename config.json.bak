@@ -8,7 +8,7 @@
             "bucketName": "test9614"
         },
         "localDirectoriesPathDetails": {
-            "directoryPathArrays": ["/logs/"]
+            "directoryPathArrays": ["/home/exotel/awsS3TestUsingNode/production/testuploadfolderdata/"]
         }
     },
     "download": {

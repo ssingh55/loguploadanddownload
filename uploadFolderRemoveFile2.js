@@ -11,33 +11,35 @@ configAWSregion = () => {
 }
 
 s3Upload = (params, bucketFilePath, localFilePath, bucketName) => {
+    console.log(new Date().toLocaleString()," Inside s3Upload function",bucketFilePath);
     return new Promise((resolve, reject) => {
         let s3 = new AWS.S3();
         s3.upload(params, (err, data) => {
             if (err) {
-                if (err.code == 'NoSuchBucket') {
-                    console.log('Check the bucket name');
+                if (err.code == "NoSuchBucket") {
+                    console.error(new Date().toLocaleString()," Check the bucket name");
                     resolve(false);
                 }
                 else {
-                    console.log("check for params are correct", err);
+                    console.error(new Date().toLocaleString()," Check for params are correct", err);
                     resolve(false);
                 }
             } else {
                 if (data.ETag) {
-                    console.log("Successfully uploaded " + bucketFilePath + " to " + bucketName);
+                    console.log(new Date().toLocaleString()," Successfully uploaded " + bucketFilePath + " to " + bucketName);
                     fs.unlink(localFilePath, (err) => {
                         if (err) {
-                            console.error(err);
+                            console.log(new Date().toLocaleString()," Error in unlinking the file");
+                            console.error(new Date().toLocaleString()," ",err);
                             resolve(false);
                         }
                         else {
-                            console.log("Removed the file " + localFilePath);
+                            console.log(new Date().toLocaleString()," Removed the file " + localFilePath);
                             resolve(true);
                         }
                     })
                 } else {
-                    console.log("\x1b[31m", "File uploading was unsuccessful");
+                    console.log(new Date().toLocaleString(),"\x1b[31m", " File uploading was unsuccessful");
                 }
             }
         });
@@ -45,13 +47,13 @@ s3Upload = (params, bucketFilePath, localFilePath, bucketName) => {
 }
 
 const uploadDir = (directoryPath, bucketName) => {
-    console.log('inside uploadDir function');
+    console.log(new Date().toLocaleString()," inside uploadDir function");
     configAWSregion();
 
     directoryWalkSync = (currentDirPath, callback) => {
-        console.log("inside directoryWalksync currentdir :", currentDirPath)
+        console.log(new Date().toLocaleString()," inside directoryWalksync currentdir :", currentDirPath)
         try {
-            fs.readdirSync(currentDirPath).forEach(function (pathName) {
+            fs.readdirSync(currentDirPath).forEach(async (pathName) => {
                 let filePath = path.join(currentDirPath, pathName);
                 let fileStat = fs.statSync(filePath);
                 if (fileStat.isFile()) {
@@ -59,7 +61,7 @@ const uploadDir = (directoryPath, bucketName) => {
                     let currentTime = new Date();
                     let diffBetweenCurrentAndModifiedTime = (currentTime - fileModifiedTime) / (1000 * 60 * 60 * 24);
                     if (diffBetweenCurrentAndModifiedTime > configTime.minTimePeriod) {
-                        callback(filePath);
+                        await callback(filePath);
                     }
                 } else if (fileStat.isDirectory()) {
                     directoryWalkSync(filePath, callback);
@@ -68,9 +70,9 @@ const uploadDir = (directoryPath, bucketName) => {
         }
         catch (err) {
             if (err.code === "ENOENT")
-                console.error("File not found check for path");
+                console.error(new Date().toLocaleString()," File not found check for path");
             else
-                console.log("Error: ", err);
+                console.log(new Date().toLocaleString()," Error: ", err);
         }
     }
 
@@ -84,7 +86,7 @@ const uploadDir = (directoryPath, bucketName) => {
         let params = {
             Bucket: bucketName,
             Key: bucketFilePath,
-	    StorageClass: "REDUCED_REDUNDANCY",
+	        StorageClass: "REDUCED_REDUNDANCY",
             Body: fileStream
         };
         await s3Upload(params, bucketFilePath, localFilePath, bucketName);

@@ -45,7 +45,7 @@ s3Download = (fileName, downloadDirectory, bucketName) => {
                     resolve(error.code)
                 }
                 else {
-                    console.log("No Such Key found or Stream Content Length Mismatch");
+                    console.log("No Such Key found or Stream Content Length Mismatch",error);
                     resolve('No such key found');
                 }
             })
